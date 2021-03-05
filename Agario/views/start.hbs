@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Agar.io Rooms</title>
+    <link rel="stylesheet" href="style/main.css">
+    <link rel="stylesheet" href="style/start.css">
+</head>
+
+<body>
+    <header>Agar.io Rooms</header>
+    <main>
+        <div class="server-table">
+            <form method="GET">
+                {{#each servers}}
+                <div class="server-table-list">
+                    <div class="content">
+                        <b>{{name}}</b>
+                        Players: {{currentPlayers}} / {{maxPlayers}}
+                    </div>
+                    <button name="ID" value="{{id}}" formaction="/game"> Join!</button>
+                </div>
+                {{/each}}
+            </form>
+        </div>
+
+    </main>
+    <footer>Agar.io - DOMINIK SMĘDA 2019</footer>
+</body>
+
+</html>

@@ -1,0 +1,16 @@
+for(_x=x-1;_x<=x+1 ;_x++ )
+                {
+                   //if(_x<0 || _x>=s_width)continue;
+                   for(_y=y-1;_y<=y+1; _y++ )
+                    {
+                        if(_y>=0 && _y<s_height && _x>=0 && x<s_width)
+                        {
+                        console.log(_x+" : "+_y);
+                        if(board[_x][_y]==B_BOMB || board[_x][_y]==B_FINDBOMB)
+                        {
+                            hmany++;   
+                            console.log("BOMB: "+_x+" : "+_y);
+                        }
+                        }
+                    }
+                }

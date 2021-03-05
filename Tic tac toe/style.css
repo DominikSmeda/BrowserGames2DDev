@@ -1,0 +1,133 @@
+*{
+    padding: 0;
+    margin:0;
+    
+}
+
+body{
+background-color: r;
+}
+
+header{
+    width:100%;
+    text-align: center;
+    padding:40px 0;
+    background-color: black;
+    color:white;
+    font-variant: small-caps;
+    font-family: Verdana;
+    font-size:40px;
+    font-weight: 800;
+}
+
+main{
+    position: relative;
+    margin: 0 auto;
+    width:960px;
+    height: 510px;
+    background-color: aliceblue;
+    padding: 30px 0px;
+    margin-top: 10px;
+}
+
+#board{
+    margin:15px auto;  
+    background-color: white;
+    width:300px;
+    height:300px;
+    border:3px solid;
+    user-select: none;
+}
+
+.area{
+    box-sizing: border-box;
+    width:100px;
+    height:100px;
+    border:2px solid black;
+    float: left;
+    text-align: center;
+    font-size: 70px;
+    
+    transition: 0.4s;
+    font-family: Verdana;
+}
+
+.area:nth-child(3n+1){
+    clear:both;
+}
+
+.empty:hover{
+    background-color: mediumspringgreen;
+    cursor: pointer;
+}
+
+.occupied:hover{
+    background-color: firebrick;
+    cursor: pointer;
+}
+
+#turn{
+    margin:0 auto;
+    width:300px;
+    background-color: inherit;
+    font-size: 30px;
+    text-align: center;
+    padding:20px 0;
+    color: cornflowerblue;
+    font-weight: 600;
+    font-family: Verdana;
+    
+}
+
+.hovO:before {
+    content: "o";
+    color:white;
+}
+
+.hovX:before {
+    content: "x";
+    color:white;
+}
+
+#newGame{
+    width:300px;
+    padding:20px 0;
+    margin: 30px auto;
+    height:30px;
+    background-color: cornflowerblue;
+    font-size: 22px;
+    text-align: center;
+    color:white;
+    font-weight: 800;
+    cursor: pointer;
+    user-select: none;
+    font-family: Verdana;
+    transition:0.4s;
+}
+
+#newGame:hover{
+    background-color: mediumvioletred;
+    color: aliceblue;
+}
+
+turn var{
+    text-decoration: none;
+    font-size: 32px;
+    font-family: Verdana;
+}
+
+footer{
+    position:absolute;
+    font-family: Verdana;
+    right:-50px;
+    margin-right:50px;
+    color:black;
+    text-decoration: underline;
+    margin-top:20px;
+    cursor:pointer;
+}
+
+footer:hover{
+    color: mediumvioletred;
+}
+

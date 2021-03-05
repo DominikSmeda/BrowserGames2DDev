@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+    
+<head>
+    <meta charset="utf-8">
+    <title>Minesweeper - Online Game</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="icon1.png">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+    
+<body>
+
+<header> &#128163; Minesweeper 	</header>
+<main>
+    <div id="board">
+        <img id="skeleton" src="icon1.png" alt="#">
+        <button>Play!</button>
+        <img id="load" src="loading2.gif" alt="#">
+    </div>
+    
+</main>
+    
+<footer> &copy; Dominik Smêda </footer>
+    
+</body> 
+<script>
+const B_EMPTY = 0;
+const B_BOMB = 1;
+    
+    $('#board').click(function()
+    {
+        alert();
+    });
+    
+    $('#board button').click(function()
+    {    
+        $('#board button').hide();
+        $('#board #load').css('visibility', 'visible');
+        setTimeout(function(){ startGame(); }, 500);
+    });
+    
+
+    
+    function startGame()
+    {
+            //alert("Start!");
+            $('#board').html("");
+            renderBoard(1);
+    }
+    
+    function renderBoard(level)
+    {
+        var s_width=0;
+        var s_height=0;
+        var s_bombs=0;
+        
+        switch(level) 
+        {       
+        case 0:
+            s_width=15;
+            s_height=10;
+            s_bombs=5;
+            break;
+        case 1:
+            s_width=18;
+            s_height=15;
+            s_bombs=12;
+            break;
+            break;
+        default:
+            alert("ERROR!");
+        }
+         
+        var board = [];
+  
+        for(x=0;x<s_width;x++)
+        {
+            board[x]=[];
+            for(y=0;y<s_height;y++)  
+            {
+               board[x][y]=B_EMPTY;     
+            }
+        }
+        
+        for(i=0;i<s_bombs;i++)
+        {
+            var sx=Math.floor((Math.random() * s_width)+0);
+            var sy=Math.floor((Math.random() * s_height)+0);
+            board[sx][sy]=B_BOMB; 
+            //dopracowac bez powtarzania
+        }
+        
+             //alert(board);
+        $('#board').append('<div id="collection"></div>');
+        
+        for(y=0;y<s_height;y++)
+        {
+            for(x=0;x<s_width;x++)  
+            {
+                var id=(y*s_width)+x;
+                $('#collection').append('<div id="'+id+'"class="notExpose"></div>');   
+            }
+            $('#collection').append('<div style="clear:both"></div>');     
+        }     
+    }
+
+ 
+    
+</script>
+</html>

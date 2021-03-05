@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-family: Verdana
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px;
+        }
+
+        canvas {
+            border: 2px solid black;
+            margin: 0 auto;
+
+        }
+
+        .center {
+            position: relative;
+            margin: 0 auto;
+            width: 900px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>A* Algorithm</h1>
+    <div class="center">
+        <canvas id="canvas" width="900" height="900"></canvas>
+    </div>
+
+
+    <script src="Vector.js"></script>
+    <script>
+        canvas = document.getElementById('canvas');
+        ctx = this.canvas.getContext('2d');
+
+        let width = 900;
+        let height = 900;
+
+        let cols = 100;
+        let rows = 100;
+        let grid = new Array(cols);
+
+        for (i = 0; i < cols; i++) {
+            grid[i] = new Array(rows);
+        }
+
+
+        let openSet = [];
+        let colsedSet = [];
+
+        // console.log(grid);
+
+        var aEnd = false;
+
+        class Spot {
+            constructor(x, y) {
+                this.size = width / cols;
+                this.x = x;
+                this.y = y;
+                this.f = 0;
+                this.g = 0;
+                this.h = 0;
+                this.previous = null;
+                this.obsticle = Math.random() < 0.2 ? true : false;
+
+
+
+                this.neighbours = [];
+                this.neighboursCost = [];
+            }
+
+            show(color = "white") {
+
+
+                ctx.fillStyle = color;
+                ctx.strokeStyle = "#ffffff";
+                if (this.obsticle == true) {
+                    ctx.fillStyle = '#000000';
+                }
+
+                ctx.fillRect(this.size * this.x, this.size * this.y, this.size, this.size);
+                ctx.strokeRect(this.size * this.x, this.size * this.y, this.size, this.size);
+
+            }
+
+            addNeighbours(grid) {
+                let x = this.x;
+                let y = this.y;
+                if (x < cols - 1) {
+                    this.neighbours.push(grid[x + 1][y])
+                    this.neighboursCost.push(1)
+                }
+
+                if (x > 0) {
+                    this.neighbours.push(grid[x - 1][y])
+                    this.neighboursCost.push(1)
+                }
+
+                if (y < rows - 1) {
+                    this.neighbours.push(grid[x][y + 1])
+                    this.neighboursCost.push(1)
+                }
+
+                if (y > 0) {
+                    this.neighbours.push(grid[x][y - 1])
+                    this.neighboursCost.push(1)
+                }
+
+                if (y > 0 && x > 0 && !grid[x][y - 1].obsticle && !grid[x - 1][y].obsticle) {
+                    this.neighbours.push(grid[x - 1][y - 1])
+                    this.neighboursCost.push(1.141)
+                }
+
+                if (y < rows - 1 && x > 0 && !grid[x][y + 1].obsticle && !grid[x - 1][y].obsticle) {
+                    this.neighbours.push(grid[x - 1][y + 1])
+                    this.neighboursCost.push(1.141)
+                }
+
+                if (x < cols - 1 && y > 0 && !grid[x][y - 1].obsticle && !grid[x + 1][y].obsticle) {
+                    this.neighbours.push(grid[x + 1][y - 1])
+                    this.neighboursCost.push(1.141)
+                }
+
+                if (y < rows - 1 && x < cols - 1 && !grid[x][y + 1].obsticle && !grid[x + 1][y].obsticle) {
+                    this.neighbours.push(grid[x + 1][y + 1])
+                    this.neighboursCost.push(1.141)
+                }
+            }
+
+        }
+
+
+        for (let i = 0; i < cols; i++) {
+            for (let j = 0; j < rows; j++) {
+                grid[i][j] = new Spot(i, j);
+            }
+        }
+
+        for (let i = 0; i < cols; i++) {
+            for (let j = 0; j < rows; j++) {
+                grid[i][j].addNeighbours(grid);
+
+
+            }
+        }
+
+
+        let start = grid[0][0];
+        let end = grid[cols - 1][rows - 20];
+        // end = grid[cols - 1][10];
+        openSet.push(start);
+
+        for (let col of grid) {
+            for (let item of col) {
+                item.show();
+            }
+        }
+
+        start.obsticle = false;
+        end.obsticle = false;
+        let path = [];
+
+        function AStarStep() {
+            function heuristic(a, b) {
+                let dist = Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2))//distance
+                return dist
+            }
+
+            if (openSet.length > 0) {
+
+                let winner = 0;
+                for (let i = 0; i < openSet.length; i++) {
+
+                    if (openSet[i].f < openSet[winner].f) {
+                        winner = i;
+                    }
+
+                }
+
+                let current = openSet[winner];
+
+                if (current === end) {
+                    console.log('%cPATH FINDED', 'color: lightgreen; font-size:20px');
+                    // let path = [];
+
+                    let temp = current;
+
+                    while (temp.previous) {
+                        path.push(temp.previous)
+                        temp = temp.previous;
+                        temp.show('blue')
+                    }
+                    aEnd = true;
+                    return path;
+                }
+
+                removeFromArray(openSet, current);
+                colsedSet.push(current)
+
+                var neighbours = current.neighbours;
+                for (var i = 0; i < neighbours.length; i++) {
+                    let neighbour = neighbours[i];
+
+                    if (!colsedSet.includes(neighbour) && !neighbour.obsticle) {
+                        let tempG = current.g + current.neighboursCost[i]
+
+                        if (openSet.includes(neighbour)) {
+                            if (tempG < neighbour.g) {
+                                neighbour.g = tempG;
+                                neighbour.h = heuristic(neighbour, end);
+                                neighbour.f = neighbour.g + neighbour.h;
+                                neighbour.previous = current;
+                                neighbour.show('red')
+                            }
+                        }
+                        else {
+                            neighbour.g = tempG;
+                            openSet.push(neighbour)
+                            neighbour.h = heuristic(neighbour, end);
+                            neighbour.f = neighbour.g + neighbour.h;
+                            neighbour.previous = current;
+                            neighbour.show('red')
+                        }
+
+
+
+                    }
+
+                }
+            }
+            else {
+                console.log('%cPATH DOESNT EXIST', 'color: red; font-size:20px');
+                aEnd = true;
+                return;
+            }
+
+            // // display();
+            // try {
+            //     AStarStep();
+            // }
+            // catch (err) {
+            //     console.log(err);
+            //     // setTimeout(() => {
+            //     //     AStarStep();
+            //     // }, 2)
+            //     druga();
+            //     return
+            // }
+
+
+        }
+
+        function druga() {
+            AStarStep();
+        }
+
+        function display() {
+
+
+            // ctx.clearRect(0, 0, width, height);
+
+            // for (let col of grid) {
+            //     for (let item of col) {
+            //         item.show();
+            //     }
+            // }
+
+            for (let i = 0; i < colsedSet.length; i++) {
+                colsedSet[i].show('red');
+            }
+
+            for (let i = 0; i < openSet.length; i++) {
+                openSet[i].show('lightgreen');
+            }
+
+        }
+
+        let stopFlag = false;
+        function loop() {
+            if (!stopFlag) return;
+            requestAnimationFrame(loop);
+            // display()
+            // AStarStep();
+
+        }
+        loop()
+
+        async function startA() {
+            console.log('--- start');
+
+            let startTime = new Date();
+            // let path = await AStarStep();
+            stopFlag = true;
+
+            while (!aEnd) {
+                AStarStep();
+            }
+            let endTime = new Date();
+            console.log('--- end');
+
+
+            console.log("%cTime:" + (endTime - startTime) + "ms", 'color: purple; font-size:15px');
+            // console.log("Start:", startTime.getMilliseconds(), "End:", endTime.getMilliseconds());
+            console.log('Size: ' + cols + 'x' + rows)
+
+            // console.log(path);
+
+        }
+
+        startA()
+
+
+
+
+        function removeFromArray(arr, elt) {
+            for (var i = arr.length - 1; i >= 0; i--) {
+                if (arr[i] == elt) {
+                    arr.splice(i, 1);
+                }
+            }
+        }
+
+        class AStar {
+            constructor(start, end, graph) {
+
+            }
+
+            search() {
+
+            }
+        }
+    </script>
+
+</body>
+
+</html>

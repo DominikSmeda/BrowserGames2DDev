@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="libs/jquery331.js"></script>
+</head>
+<style>
+    .s,
+    .d {
+        position: absolute;
+        top: 300px;
+        left: 500px;
+        width: 50px;
+        height: 50px;
+        background: red;
+
+    }
+</style>
+
+<body>
+    <div class="s"></div>
+    <div class="d"></div>
+    <script>
+        let x = 0;
+        let y = 0;
+        let radius = 200;
+        let ox = 500;
+        let oy = 300;
+        let angle = 0;
+        console.log(Math.sin(90));
+
+        function move() {
+
+            x = ox + Math.cos(angle * (Math.PI / 180)) * radius;
+            y = oy + Math.sin(angle * (Math.PI / 180)) * radius;
+            $('div.s').css({ 'top': y, 'left': x });
+            // if (angle / 100 == 6) {
+            //     clearInterval(timer);
+            // }
+        }
+        var timer = setInterval(move, 500);
+    </script>
+</body>
+
+</html>

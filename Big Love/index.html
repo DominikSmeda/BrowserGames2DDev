@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pl" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+  <style>
+
+  *{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: Verdana;
+    outline:none;
+  }
+#boardGame{
+  padding: 10px;
+  width:500px;
+  border: 5px solid black;
+  text-align: center;
+  position: relative;
+  margin: 40px auto;
+
+}
+#boardGame div{
+  border:1px solid black;
+  width:60px;
+  height:60px;
+  position: absolute;
+  cursor: pointer;
+}
+
+#boardGame .player{
+  border: none;
+  border-radius: 50%;
+  background: #6495ed;;
+  position: absolute;
+  z-index: 11;
+  transition: 0.7s, transform 0s;
+  border: 5px solid black;
+  border-top-color: red;
+}
+#boardGame #player2{
+  background: pink;
+  z-index: 10;
+}
+
+.trail{
+    background: #FFFF66;
+    border: none !important;
+}
+
+.goodField{
+    background: #33FF33;
+}
+
+.badField{
+  background: #CC0000;
+}
+
+header{
+  text-align: center;
+  width: 100%;
+  padding: 40px;
+  font-size: 40px;
+  letter-spacing: 1px;
+  font-variant: small-caps;
+  background: white;
+  color: red;
+  font-weight: 800;
+}
+
+button{
+  padding:10px;
+  border: none;
+  margin: 5px;
+  cursor: pointer;
+  border-radius: 2px;
+  background: #6495ed;
+  color: white;
+  transition: 0.3s;
+  width:120px;
+}
+button:hover{
+  transform: scale(1.05);
+}
+
+input{
+  padding:10px;
+  border: none;
+  margin: 5px;
+  width: 100px;
+  margin-right: 10px;
+  border-radius: 2px;
+}
+
+#controls{
+  width: 100%;
+  text-align: center;
+  background: black;
+  padding: 10px;
+  white-space: nowrap;
+  color: white;
+}
+</style>
+</head>
+  <body>
+    <header>Big Love ❤</header>
+    <div id="controls">
+      <button id="start">Start Game</button>
+      <button id="next">Next Move</button>
+      <button id="reset">Restart Game</button>
+      <input id="iw" ondragover=""type="number" placeholder="WIDTH" min="1">X
+      <input id="ih" type="number" placeholder="HEIGHT" min="1">
+    </div>
+    <div id="boardGame">
+      <div id="player1" class="player"></div>
+      <div id="player2" class="player"></div>
+    </div>
+
+  <script>
+    $(document).ready(function() {
+      let WIDTH = 5;
+      let HEIGHT = 5;
+      let FIELDSIZE = 60;
+      let coordsTrail = [];
+      let AMTimer = 0, LTimer = 0;
+
+      NewGame();
+      renderBoard();
+      lookAtMe();
+
+function renderBoard() {
+      $('#boardGame *').not('.player').remove();
+      $('#boardGame').css({'width' : FIELDSIZE*WIDTH + 9, 'height' : FIELDSIZE*HEIGHT + 9});
+      for(let y=0; y<HEIGHT; y++){
+        for(let x=0; x<WIDTH; x++){
+          let field = $('<div>');
+          $('#boardGame').append(field);
+          field.css({'top': FIELDSIZE *y, 'left': FIELDSIZE *x});
+        }
+      }
+}
+      $('#boardGame').on('click', 'div' ,function() {
+          if(!$(this).hasClass('goodField'))return;
+          $(this).addClass('trail');
+          $(this).removeClass('goodField');
+          let newCoords = {x: $(this).css('left'), y: $(this).css('top')};
+          coordsTrail.push(newCoords);
+      });
+
+      $('#boardGame').on('mouseover', 'div', function() {
+        if($('#start').text() != "Start Game")return;
+          if(coordsTrail.length > 0){
+            let lastBox = {x: parseInt($(this).css('left')), y: parseInt($(this).css('top'))};
+            let xc = parseInt(coordsTrail[coordsTrail.length-1].x);
+            let yc = parseInt(coordsTrail[coordsTrail.length-1].y);
+            if(  (lastBox.x == xc - FIELDSIZE && lastBox.y == yc)
+              || (lastBox.x == xc + FIELDSIZE && lastBox.y == yc)
+              || (lastBox.y == yc + FIELDSIZE && lastBox.x == xc)
+              || (lastBox.y == yc - FIELDSIZE && lastBox.x == xc) ){
+                let flag = false;
+                for(let i=0; i< coordsTrail.length-1; i++){
+                  if(parseInt(coordsTrail[i].x) == lastBox.x && parseInt(coordsTrail[i].y) == lastBox.y){
+                    flag=true;
+                  }
+              }
+                if(flag)$(this).addClass('badField');
+                else $(this).addClass('goodField');
+            }
+            else{
+                $(this).addClass('badField');
+            }
+          }
+          else{
+              $(this).addClass('goodField');
+          }
+      });
+      $('#boardGame').on('mouseleave', 'div', function() {
+          $(this).removeClass('badField goodField');
+      });
+
+      $('#start').on('click',function(){
+
+          if($(this).text() == "Start Game")
+          {
+            if(coordsTrail.length<3){
+              alert('The path is too short!');
+              return;
+            }
+            let p1 = coordsTrail.shift();
+            let p2 = coordsTrail.pop() || p1;
+            LTimer = setInterval(lookAtMe, 100);
+            $('#player1').css({'top': p1.y, 'left': p1.x});
+            $('#player2').css({'top': p2.y, 'left': p2.x});
+            $(this).text('Auto Moving');
+
+        }
+        else{
+          if(AMTimer == 0)
+          {
+            $('#next').trigger('click');
+            AMTimer = setInterval(function(){
+              $('#next').trigger('click');
+            },700)
+          }
+        }
+
+      });
+
+      $('#next').on('click',function() {
+        if($('#start').text() == "Start Game")return;
+
+        if(coordsTrail.length == 0){
+          alert('Game Over!');
+          clearInterval(AMTimer);
+          AMTimer = 0;
+          clearInterval(LTimer);
+          LTimer = 0;
+          return;
+        }
+        let p1 = coordsTrail.shift();
+        let p2 = coordsTrail.pop() || p1;
+        $('#player1').css({'top': p1.y, 'left': p1.x});
+        $('#player2').css({'top': p2.y, 'left': p2.x});
+      });
+
+      $('#controls input').on('change keyup',function() {
+        if($('#start').text() != "Start Game")return;
+        if(this.value == '')
+        {
+          WIDTH = 5;
+          HEIGHT = 5;
+        }
+        else if(this.id === "iw"){
+          WIDTH = this.value;
+        }
+        else{
+          HEIGHT = this.value;
+        }
+        coordsTrail =[];
+        renderBoard();
+      });
+
+      function lookAtMe(){
+          console.log('looking');
+
+        let p1=$("#player1");
+        let p2=$("#player2");
+        let p1Center=[ p1.offset().left+p1.width()/2, p1.offset().top+p1.height()/2 ];
+        let p2Center=[ p2.offset().left+p2.width()/2, p2.offset().top+p2.height()/2 ];
+
+        let p1Angle = Math.atan2( p2Center[0] - p1Center[0], -(p2Center[1] - p1Center[1]) ) * (180/Math.PI);
+        let p2Angle = Math.atan2( p1Center[0] - p2Center[0], -(p1Center[1] - p2Center[1]) ) * (180/Math.PI);
+
+        p1.css({ 'transform': 'rotate('+p1Angle+'deg)'});
+        p2.css({ 'transform': 'rotate('+p2Angle+'deg)'});
+      }
+
+      $('#reset').on('click', function(){
+        NewGame();
+      });
+
+      function NewGame(){
+        clearInterval(AMTimer);
+        AMTimer = 0;
+        $('#start').text('Start Game');
+        coordsTrail = [];
+        renderBoard();
+        $('#player1').css({'top' : -200, 'left' : 'calc(50% - 200px)'});
+        $('#player2').css({'top' : -200, 'left' : 'calc(50% + 140px)'});
+      }
+
+
+    });
+  </script>
+  </body>
+</html>

@@ -1,0 +1,207 @@
+*{
+    padding: 0;
+    margin: 0;
+    font-family: Verdana;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+@font-face {
+    font-family: Calculator;
+    src: url(font-calculator.ttf);
+}
+
+header{
+    width:100%;
+    text-align: center;
+    padding:30px 0;
+    font-size: 35px;
+    font-variant: small-caps;
+    background-color: black;
+    color:white;
+}
+
+main{
+    
+    min-height: 1000px;
+    margin:0 auto;
+   
+    background-color: ghostwhite;
+}
+
+footer{
+    text-align: right;
+    padding:0px 100px;
+}
+
+#board{
+    background-color: aliceblue;
+    padding:20px;
+    min-height: 800px;
+    user-select: none;
+    cursor: url('cur2.cur');
+}
+#board #skeleton{
+    width:300px;
+    height:auto;
+    margin:0 auto;
+    left:40px;
+    position: relative;
+    margin-top:100px;
+}
+
+#board button{
+    width:300px;
+    height: 45px;
+    display: block;
+    margin:0 auto;
+    font-size: 23px;
+    letter-spacing:1px;
+    font-variant: small-caps;
+     margin-top:10px;
+    border:none;
+    background-color: firebrick;
+    color:white;
+    transition: 0.5s;
+    cursor: pointer;
+}
+
+#board button:hover{
+
+    border:none;
+    transform: scale(1.05);
+}
+
+#board #load{
+    width:170px;
+    height:auto;
+    display: block;
+    margin:0px auto;
+    visibility: hidden;
+    margin-top:20px;
+}
+
+#collection{
+    display: inline-block;
+    border:10px solid gainsboro;
+    box-sizing: border-box;
+    user-select: none; 
+    background-color: gainsboro;
+    border:10px outset gainsboro;
+
+}
+.notExpose{
+    float:left;
+    width:50px;
+    height:50px;
+    background-color: gainsboro;
+    box-sizing: border-box;
+    border:6px;
+    text-align: center;
+    border-style: outset;
+    cursor: pointer;
+	
+}
+
+.notExpose:hover{
+    border-color:gainsboro;
+}
+    
+.Expose{
+    float:left;
+    width:50px;
+    height:50px;
+    background-color: gainsboro;
+    box-sizing: border-box;
+    border:1px solid lightgray;
+    text-align: center;
+    font-size: 22px;
+    padding-top: 10px;
+    font-weight: 900;
+   
+}
+
+.Flag
+{
+	background:url("flag.png");
+	background-size:30px;
+	background-position:center;
+	background-repeat:no-repeat;
+}
+/*
+<div id="statistics">
+    <div id="l_flag"><img src="flag.png"><var></var></div>
+    <div id="emoticon"></div>
+    <div id="timer"></div>
+</div>
+*/
+#statistics{
+	background-color:gainsboro;
+	margin:0 auto;
+    padding:10px;
+    border: 5px inset;
+    border-bottom: none;
+    text-align: center;
+   
+  
+}
+
+#statistics #l_flag
+{
+    float:left;
+    left:10px;  
+
+        
+}
+#statistics #numb{
+    color: red;
+    background-color: black;
+    font-family: Calculator;
+    font-size: 60px;
+    float:left;
+    padding:0 5px;
+    
+}
+
+#statistics img{
+    width:50px;
+}
+
+#statistics #emoticon{
+    background-color: black;
+    width:160px;
+    height:60px;
+    float:left;
+    font-size: 30px;
+    color:red;
+    margin-left: 60px;
+    border:3px solid black;
+    font-family: Calculator;
+    padding-top:10px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    position:absolute;
+    
+   margin:0 auto;
+left:0;
+   right:0;
+
+}
+
+#statistics #emoticon:hover{
+
+    border:3px solid black;
+}
+
+#statistics #timer{
+    float:right;
+    color: red;
+    background-color: black;
+    font-family: Calculator;
+    font-size: 60px;
+     padding:0 5px;
+    
+}
+
+
+

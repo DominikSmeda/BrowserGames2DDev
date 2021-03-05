@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-family: Verdana
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px;
+        }
+
+        canvas {
+            border: 1px solid black;
+            margin: 0 auto;
+
+        }
+
+        .center {
+            position: relative;
+            margin: 0 auto;
+            width: 900px;
+        }
+
+        #blocker {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+
+        }
+
+        #settings {
+            position: absolute;
+            width: 550px;
+            height: 400px;
+            background: white;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #settings #play {
+            padding: 5px;
+            width: 160px;
+            /* margin-left: 40px; */
+            margin-top: 10px;
+            height: 30px;
+        }
+
+        #settings select,
+        #laps {
+            height: 30px;
+            width: 70px;
+
+            outline: none;
+        }
+
+        #laps {
+            margin-right: 60px;
+        }
+
+        #settings h3 {
+            text-align: center;
+            padding-top: 10px;
+            padding-bottom: 20px;
+            font-size: 20px;
+            color: cornflowerblue;
+            letter-spacing: 1px;
+        }
+
+        #settings #players {
+            width: 100%;
+        }
+
+        #settings table {
+            width: 100%;
+            cursor: normal;
+        }
+
+        #settings table table {
+            width: 230px;
+        }
+
+        #settings table input {
+            width: 230px;
+            outline: none;
+            text-align: center;
+            border: none;
+            background: cornflowerblue;
+            color: white;
+            padding: 5px;
+        }
+
+        .key {
+            cursor: pointer;
+            padding: 5px;
+            background: cornflowerblue;
+            color: white;
+            width: 50%;
+            overflow: hidden;
+        }
+
+        #ui {
+            position: absolute;
+            z-index: 20;
+        }
+
+        #ui .player {
+            width: 225px;
+            padding: 10px;
+            border: 2px solid white;
+            float: left;
+            background: cornflowerblue;
+            color: white;
+        }
+
+        #ui .color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: cornflowerblue;
+            float: left;
+
+        }
+
+        #ui .laps {
+            float: left;
+            padding: 5px 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Line Racer</h1>
+    <div class="center">
+
+        <canvas id="canvas" width="900" height="600"></canvas>
+
+    </div>
+
+
+
+    <script>
+        CanvasRenderingContext2D.prototype.point = function (x, y) {
+            this.beginPath();
+            this.rect(x, y, 2, 2)
+            this.stroke();
+        }
+
+
+
+        const width = 900;
+        const height = 900;
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+
+        class Line {
+
+            constructor(canvas) {
+                this.line = new Path2D();
+                this.steps = [];
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+
+                this.points = [];
+                this.mousePoint = {};
+
+                this.drawingMode = false;
+
+                this.startDrawingMode()
+            }
+
+            startDrawingMode() {
+                this.drawingMode = true;
+                let mode = "point";
+                let points = [];
+
+                let click = (e) => {
+                    let x = e.offsetX;
+                    let y = e.offsetY;
+
+                    if (!this.steps.length) {
+                        this.steps.push({ x, y })
+                        this.line.moveTo(x, y);
+                        this.points.push({ x, y })
+
+                    }
+                    else {
+                        this.line.lineTo(x, y)
+                        this.points.push({ x, y })
+                        this.steps.push({ x, y })
+                    }
+
+                    // if (mode == "point") {
+                    //     this.ctx.point(x, y)
+                    //     points.push({ x, y });
+
+                    // if (points.length == 1) {
+                    //     newLine.moveTo(points[0].x, points[0].y);
+                    //     newLine.lineTo(points[1].x, points[1].y);
+                    //     points = [];
+                    //     // this.ctx.stroke(newLine)
+
+                    // }
+                    // }
+
+                }
+                canvas.addEventListener('click', click);
+
+                let mousemove = (e) => {
+                    let x = e.offsetX;
+                    let y = e.offsetY;
+
+                    this.mousePoint = { x, y }
+
+                }
+                canvas.addEventListener('mousemove', mousemove);
+
+                window.addEventListener('keydown', (e) => {
+                    console.log(e.key);
+                    switch (e.key) {
+                        case 'Backspace': {
+
+                            this.points.splice(-1);
+                            this.recreatePath();
+                            break;
+                        }
+
+                        case 'e': {
+                            if (points.length == 2)
+                                mode = "angle"
+                            break;
+                        }
+
+                        case 'Enter': {
+                            if (mode == "angle") {
+                                mode = "point";
+                                this.line.addPath(newLine)
+
+                            }
+                            break;
+                        }
+
+                        case 'Escape': {
+                            canvas.removeEventListener('mousemove', mousemove);
+                            canvas.removeEventListener('click', click);
+                            this.drawingMode = false;
+                            break;
+                        }
+                    }
+                    console.log(points);
+
+                })
+            }
+
+            update() {
+
+            }
+
+            render() {
+                if (!this.steps.length) return
+                // this.ctx.fill(this.line);
+                this.ctx.stroke(this.line);
+
+                if (this.drawingMode) {
+                    let last = this.steps[this.steps.length - 1];
+
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(last.x, last.y)
+                    this.ctx.lineTo(this.mousePoint.x, this.mousePoint.y);
+                    this.ctx.stroke();
+
+                    this.ctx.save();
+                    this.ctx.strokeStyle = "red"
+                    for (let point of this.points) {
+
+                        this.ctx.point(point.x, point.y)
+                    }
+                    this.ctx.restore();
+
+                }
+            }
+
+            recreatePath() {
+                console.log(this.steps);
+
+                this.line = new Path2D();
+                for (let step of this.steps) {
+                    line.moveTo(step.x, step.y)
+                }
+            }
+
+        }
+
+
+        let lines = []
+
+        function loop() {
+            ctx.clearRect(0, 0, width, height);
+            requestAnimationFrame(() => loop())
+
+            for (let line of lines) {
+                line.update();
+                line.render();
+            }
+
+        }
+        loop();
+
+
+        window.addEventListener('keydown', (e) => {
+            console.log(e.key);
+
+            if (e.key == "n") {
+                lines.push(new Line(canvas));
+            }
+        })
+
+
+    </script>
+
+</body>
+
+</html>

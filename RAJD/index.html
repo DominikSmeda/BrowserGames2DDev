@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-family: Verdana
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px;
+        }
+
+        canvas {
+            border: 1px solid black;
+            margin: 0 auto;
+
+        }
+
+        .center {
+            position: relative;
+            margin: 0 auto;
+            width: 900px;
+        }
+
+        #blocker {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+
+        }
+
+        #settings {
+            position: absolute;
+            width: 550px;
+            height: 400px;
+            background: white;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #settings #play {
+            padding: 5px;
+            width: 160px;
+            /* margin-left: 40px; */
+            margin-top: 10px;
+            height: 30px;
+        }
+
+        #settings select,
+        #laps {
+            height: 30px;
+            width: 70px;
+
+            outline: none;
+        }
+
+        #laps {
+            margin-right: 60px;
+        }
+
+        #settings h3 {
+            text-align: center;
+            padding-top: 10px;
+            padding-bottom: 20px;
+            font-size: 20px;
+            color: cornflowerblue;
+            letter-spacing: 1px;
+        }
+
+        #settings #players {
+            width: 100%;
+        }
+
+        #settings table {
+            width: 100%;
+            cursor: normal;
+        }
+
+        #settings table table {
+            width: 230px;
+        }
+
+        #settings table input {
+            width: 230px;
+            outline: none;
+            text-align: center;
+            border: none;
+            background: cornflowerblue;
+            color: white;
+            padding: 5px;
+        }
+
+        .key {
+            cursor: pointer;
+            padding: 5px;
+            background: cornflowerblue;
+            color: white;
+            width: 50%;
+            overflow: hidden;
+        }
+
+        #ui {
+            position: absolute;
+            z-index: 20;
+        }
+
+        #ui .player {
+            width: 225px;
+            padding: 10px;
+            border: 2px solid white;
+            float: left;
+            background: cornflowerblue;
+            color: white;
+        }
+
+        #ui .color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: cornflowerblue;
+            float: left;
+
+        }
+
+        #ui .laps {
+            float: left;
+            padding: 5px 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Żuezel</h1>
+    <div class="center">
+        <div id="blocker">
+            <div id="settings">
+                <h3>Ustawienia</h3>
+
+                <table id="players" border="00" cellpadding="10" cellspacing="10">
+                    <tr>
+                        <td>
+                            <table border="1">
+                                <tr>
+                                    <td colspan="2"><input type="text" value="Gracz 1"></td>
+                                </tr>
+                                <tr>
+                                    <td>&#8592;</td>
+                                    <td>&#8594;</td>
+                                </tr>
+                                <tr>
+                                    <td class="key" name="1l">&#8592;</td>
+                                    <td class="key" name="1r">&#8594;</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table border="1">
+                                <tr>
+                                    <td colspan="2"><input type="text" value="Gracz 2"></td>
+                                </tr>
+                                <tr>
+                                    <td>&#8592;</td>
+                                    <td>&#8594;</td>
+                                </tr>
+                                <tr>
+                                    <td class="key" name="2l">A</td>
+                                    <td class="key" name="2r">D</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table border="1">
+                                <tr>
+                                    <td colspan="2"><input type="text" value="Gracz 3"></td>
+                                </tr>
+                                <tr>
+                                    <td>&#8592;</td>
+                                    <td>&#8594;</td>
+                                </tr>
+                                <tr>
+                                    <td class="key" name="3l">J</td>
+                                    <td class="key" name="3r">L</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table border="1">
+                                <tr>
+                                    <td colspan="2"><input type="text" value="Gracz 4"></td>
+                                </tr>
+                                <tr>
+                                    <td>&#8592;</td>
+                                    <td>&#8594;</td>
+                                </tr>
+                                <tr>
+                                    <td class="key" name="4l">Lewy</td>
+                                    <td class="key" name="4r">Prawy</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                Okrążenia: <input id="laps" type="number" value="3" min="1">
+                Graczy:
+                <select id="lplayers">
+                    <option>1</option>
+                    <option>2</option>
+                    <option>3</option>
+                    <option selected="selected">4</option>
+                </select>
+                <button onclick="play()" id="play">Graj</button>
+            </div>
+        </div>
+        <canvas id="canvas" width="900" height="600"></canvas>
+        <div id="ui">
+            <div class="player">
+                <div class="color"></div>
+                <div class="laps"></div>
+                <div style="clear:both"></div>
+            </div>
+            <div class="player">
+                <div class="color"></div>
+                <div class="laps"></div>
+                <div style="clear:both"></div>
+            </div>
+            <div class="player">
+                <div class="color"></div>
+                <div class="laps"></div>
+                <div style="clear:both"></div>
+            </div>
+            <div class="player">
+                <div class="color"></div>
+                <div class="laps"></div>
+                <div style="clear:both"></div>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+
+
+
+    <script>
+
+        let keyDivs = document.querySelectorAll('.key');
+
+        for (let key of keyDivs) {
+            key.addEventListener('click', (e) => {
+                e.currentTarget.style.backgroundColor = "lightgreen"
+                document.addEventListener('keydown', change);
+
+                function change(ev) {
+                    // console.log(e.target.getAttribute("name"), ev.key);
+                    game.setPlayerKey(e.target.getAttribute("name"), ev.keyCode);
+
+                    e.target.innerText = ev.key;
+                    e.target.style.backgroundColor = "cornflowerblue";
+                    document.removeEventListener('keydown', change);
+                }
+            })
+        }
+
+        function play() {
+            document.querySelector('#blocker').style.display = "none";
+            let players = document.querySelector('#lplayers').value;
+            let laps = document.querySelector('#laps').value;
+            game.startGame(players, laps)
+        }
+
+        Keyboard = {
+            keys: [],
+            init() {
+                document.addEventListener('keydown', (e) => {
+                    this.keys[e.keyCode] = true;
+                    console.log(e.key);
+
+                })
+
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.keyCode] = false;
+                })
+            },
+
+            getKeys() {
+                return this.keys;
+            }
+        }
+        Keyboard.init()
+
+        class Player {
+            constructor(ctx, startX, startY, color, tkeys) {
+                this.ctx = ctx
+                this.canPlay = true;
+                this.position = {
+                    x: startX,
+                    y: startY
+                }
+                this.vehicle = new Image();
+                this.vehicle.src = "./car.png";
+                this.arc = 0;
+                this.color = color;
+                this.speed = 0;
+
+                this.turnKey = {
+                    l: tkeys.l,
+                    r: tkeys.r
+                }
+                this.trace = [];
+                this.trace.push({ x: this.position.xaad, y: this.position.y });
+                this.lap = 0;
+                this.onLine = false;
+                this.init();
+            }
+
+            init() {
+
+
+            }
+
+            startEngine() {
+                this.speed = 2;
+            }
+
+            getPosition() {
+                return this.position
+            }
+
+            driver() {
+                if (Keyboard.getKeys()[this.turnKey.l]) {
+                    this.arc -= Math.PI / 100;
+                }
+
+                if (Keyboard.getKeys()[this.turnKey.r]) {
+                    this.arc += Math.PI / 100;
+                }
+
+            }
+
+            setKeysControl(lkey, rkey) {
+                this.turnKey.l = lkey;
+                this.turnKey.r = rkey;
+            }
+
+            update() {
+                if (this.canPlay) {
+                    this.driver();
+                    this.move()
+                    this.printTrace()
+                }
+
+            }
+
+            printTrace() {
+                this.ctx.beginPath();
+                if (this.trace.length > 500) {
+                    this.trace.shift()
+                }
+                this.ctx.strokeStyle = this.color;
+                this.ctx.moveTo(this.trace[0].x, this.trace[0].y);
+                this.ctx.lineWidth = 10;
+
+                this.ctx.save();
+                for (let i = 0; i < this.trace.length; i++) {
+                    this.ctx.beginPath();
+                    this.ctx.strokeStyle = this.color;
+                    this.ctx.moveTo(this.trace[i].x, this.trace[i].y);
+                    if (i < this.trace.length - 450) {
+                        this.ctx.strokeStyle = this.color + Math.floor(256 * i / 50);
+                    }
+                    try {
+                        this.ctx.lineTo(this.trace[i + 1].x, this.trace[i + 1].y);
+                    }
+                    catch{
+
+                    }
+                    this.ctx.stroke()
+
+
+
+                }
+                this.ctx.restore();
+                this.ctx.save();
+                this.ctx.translate(this.position.x, this.position.y);
+                this.ctx.rotate(this.arc - Math.PI / 2);
+                this.ctx.drawImage(this.vehicle, -20, -40, 40, 40);
+                this.ctx.restore()
+
+
+            }
+
+            move() {
+                this.moveTo(Math.cos(this.arc) * this.speed, Math.sin(this.arc) * this.speed)
+            }
+
+            moveTo(dx, dy) {
+                this.position.x += dx;
+                this.position.y += dy;
+
+                this.trace.push({ x: this.position.x, y: this.position.y })
+            }
+
+            crash() {
+                this.canPlay = false;
+            }
+
+            crossLine() {
+                if (this.onLine) return;
+                this.onLine = true;
+                let angle = Math.abs(this.arc * 180 / Math.PI % 360)
+                if (angle > 90 && angle < 280) {
+                    this.lap--;
+                }
+                else {
+                    this.lap++;
+                }
+                setTimeout(() => {
+                    this.onLine = false;
+                }, 1000)
+
+            }
+        }
+
+
+
+        class GameManager {
+            constructor() {
+                this.canvas = document.getElementById('canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.size = {
+                    width: this.canvas.offsetWidth,
+                    height: this.canvas.offsetHeight
+                }
+                this.playing = false;
+                this.bgImage = new Image();
+                this.bgImage.src = "bg.jpg";
+
+                this.trackImage = new Image();
+                this.trackImage.src = "track.jpg";
+
+                this.players = [];
+
+                this.colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff'];
+                this.controlDefaultKeys = [
+                    { l: 37, r: 39 },
+                    { l: 65, r: 68 },
+                    { l: 74, r: 76 },
+                    { l: 100, r: 102 }
+                ];
+                this.laps = document.querySelector('#laps').value;
+                this.obstacles = [];
+                this.line = new Path2D();
+                this.line.moveTo(450, 350)
+                this.line.lineTo(450, 520);
+                this.init();
+
+
+            }
+
+            init() {
+
+                this.createTrack();
+                this.GameLoop();
+                // this.playing = true;
+            }
+
+            setLaps(laps) {
+                this.laps = laps;
+            }
+            startGame(players, laps) {
+                this.setLaps(laps);
+
+                for (let i = 0; i < players; i++) {
+                    this.addPlayer();
+                }
+                setTimeout(() => {
+                    for (let player of this.players) {
+                        player.startEngine();
+                    }
+                }, 1000)
+
+                this.playing = true;
+            }
+
+            addPlayer() {
+                let i = this.players.length
+                this.players.push(new Player(this.ctx, 400, 380 + i * 35, this.colors[i], this.controlDefaultKeys[i]))
+            }
+
+            renderBackground() {
+                let pat = this.ctx.createPattern(this.bgImage, "repeat");
+
+                this.ctx.rect(0, 0, this.size.width, this.size.height);
+                this.ctx.fillStyle = pat;
+                this.ctx.fill();
+            }
+
+            createTrack() {
+                let path1 = new Path2D();
+
+                path1.arc(260, this.size.height / 2, 220, Math.PI / 2, 3 / 2 * Math.PI);
+                path1.arc(this.size.width - 260, this.size.height / 2, 220, -Math.PI / 2, -3 / 2 * Math.PI);
+
+                path1.closePath();
+                this.ctx.fill(path1);
+                this.ctx.stroke(path1);
+
+                let pat2 = this.ctx.createPattern(this.bgImage, "repeat");
+
+                let path2 = new Path2D();
+
+                this.ctx.beginPath();
+                this.ctx.fillStyle = pat2;
+                path2.arc(260, this.size.height / 2, 50, Math.PI / 2, 3 / 2 * Math.PI);
+                path2.arc(this.size.width - 260, this.size.height / 2, 50, -Math.PI / 2, -3 / 2 * Math.PI);
+                path2.closePath();
+                this.ctx.fill(path2);
+                this.ctx.stroke(path2);
+
+                this.obstacles.push(path1);
+                this.obstacles.push(path2)
+            }
+
+            renderTrack() {
+                this.ctx.strokeStyle = "#000000";
+                let pat = this.ctx.createPattern(this.trackImage, "repeat");
+
+                this.ctx.fillStyle = pat;
+
+                this.ctx.lineWidth = 2;
+
+                for (let obstacle of this.obstacles) {
+                    this.ctx.fill(obstacle);
+                    this.ctx.stroke(obstacle);
+                    let pat2 = this.ctx.createPattern(this.bgImage, "repeat");
+                    this.ctx.fillStyle = pat2;
+                }
+            }
+
+            GameLoop() {
+                requestAnimationFrame(() => {
+                    this.GameLoop()
+                });
+                this.render();
+            }
+
+            render() {
+                this.renderBackground();
+                this.renderTrack();
+                this.finishLine()
+                this.collision()
+                for (let player of this.players) {
+                    player.update();
+                }
+                this.updateStats();
+                this.checkWin();
+            }
+
+            collision() {
+                for (let player of this.players) {
+                    let pos = player.getPosition();
+                    for (let obstacle of this.obstacles) {
+
+                        if (this.ctx.isPointInStroke(obstacle, pos.x, pos.y)) {
+                            player.crash();
+                        }
+                    }
+
+                    if (this.ctx.isPointInStroke(this.line, pos.x, pos.y)) {
+                        player.crossLine();
+                    }
+                }
+            }
+
+            setPlayerKey(player, key) {
+                this.controlDefaultKeys[player[0] - 1][player[1]] = key;
+            }
+
+            finishLine() {
+                this.ctx.strokeStyle = "#0000ff";
+                this.ctx.lineWidth = 7;
+
+                for (let i = 1; i < 18; i++) {
+                    this.ctx.beginPath()
+                    this.ctx.moveTo(450, 350 + (i - 1) * 10)
+                    if (i % 2) {
+                        this.ctx.strokeStyle = "#ff0000";
+                    }
+                    else {
+                        this.ctx.strokeStyle = "#ffffff";
+                    }
+                    this.ctx.lineTo(450, 350 + i * 10);
+
+                    this.ctx.stroke();
+                }
+            }
+
+            updateStats() {
+                let colors = document.querySelectorAll('#ui .color')
+                let laps = document.querySelectorAll('#ui .laps')
+
+                for (let i = 0; i < this.players.length; i++) {
+                    colors[i].style.backgroundColor = this.players[i].color;
+                    laps[i].innerText = this.players[i].lap + ' / ' + this.laps;
+                }
+            }
+
+            checkWin() {
+                for (let i = 0; i < this.players.length; i++) {
+                    if (this.players[i].lap >= this.laps + 1) {
+                        console.log('Wygrywa ' + this.players[i].color)
+                        this.playing = false;
+                    }
+                }
+            }
+        }
+
+        let game = new GameManager();
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Statki</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        header {
+            width: 100%;
+            padding: 30px;
+            font-size: 30px;
+            text-align: center;
+            background: black;
+            color: white;
+        }
+
+        body {
+            background-image: url('bg.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        main {
+            width: 2100px;
+            margin: 0 auto;
+            padding: 50px 0;
+        }
+
+        main>div {
+            width: 40%;
+        }
+
+        .PlayerSide {
+
+            width: 100%;
+        }
+
+        .PlayerSide>div {
+            float: left;
+        }
+
+        .GameBoard {
+            overflow: hidden;
+        }
+
+        .GameBoard div {
+            width: 50px;
+            text-align: center;
+            padding-top: 5px;
+            font-size: 50px;
+            height: 50px;
+            border: 1px solid white;
+            background-color: #ededed;
+            float: left;
+            cursor: pointer;
+            user-select: none;
+            background-size: 40px 40px;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .GameBoard div.clearBoth {
+            clear: both;
+        }
+
+        .statki {
+            padding: 20px;
+            width: 400px;
+            height: 100%;
+
+        }
+
+        .statki>div {
+            clear: both;
+            margin-top: 20px;
+            height: 50px;
+            display: table;
+        }
+
+        .statki div div {
+            width: 50px;
+            height: 50px;
+            background: blue;
+            border: 1px solid black;
+            border-right: none;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .statki div div:last-child {
+            border-right: 1px solid black;
+        }
+
+
+
+        .bad {
+            background: red;
+        }
+
+        .choose {
+            background-color: yellow !important;
+        }
+
+        .ok {
+            background-color: #00ff00 !important;
+        }
+
+        button {
+            width: 100px;
+            position: absolute;
+            left: calc(50% - 50px);
+            clear: both;
+            margin: 0 auto;
+            margin-top: 600px;
+            padding: 10px;
+            cursor: pointer;
+            border: 2px solid green;
+        }
+    </style>
+</head>
+
+<body>
+    <header>Statki The Game</header>
+    <main>
+
+    </main>
+
+    <script>
+        const C_SHIP = 2;
+        const C_SHOT = 4;
+        const C_HIT = 6;
+        const C_SINKED = 8;
+        let startGame = false;
+        let playerTurn = true;
+
+        function changeTurn() {
+            playerTurn = !playerTurn;
+        }
+
+        class ShipManager {
+            constructor() {
+                this.sizeOfShip = 0;
+                this.directionOfNew = true;
+
+            }
+
+            addShipsToSet() {
+                let sManager = document.querySelector('#' + this.name + ' .statki');
+                sManager.innerHTML = "";
+
+                for (let nr of this.statkiTab) {
+
+
+                    let ship = document.createElement('div');
+                    ship.setAttribute('name', nr)
+                    this.SM_addListeners(ship)
+
+                    sManager.appendChild(ship)
+                    for (let i = 0; i < nr; i++) {
+                        let rect = document.createElement('div')
+                        ship.appendChild(rect)
+                    }
+                }
+
+            }
+
+            SM_addListeners(el) {
+                if (this.isBot) return;
+                let obj = this;
+                el.addEventListener('click', function () {
+                    obj.selected(this.getAttribute('name'));
+
+                    let divs = document.querySelectorAll('.statki *')
+                    for (let d of divs) {
+
+                        d.classList.remove('ok')
+                    }
+
+                    for (let c of this.children) {
+                        c.classList.add('ok')
+                    }
+
+                });
+
+                el.addEventListener('mouseover', function () {
+                    for (let c of this.children) {
+                        c.classList.add('choose')
+                    }
+                });
+                el.addEventListener('mouseout', function () {
+                    for (let c of this.children) {
+
+                        c.classList.remove('choose')
+                    }
+
+                });
+            }
+        }
+
+        class Bot extends ShipManager {
+            constructor() {
+                super()
+                this.isBot = false;
+                this.FoeCoordsTab = []
+                this.attackedShip = [];
+                this.attackedShipDirection = undefined;
+
+            }
+
+            makeBot() {
+                this.isBot = true;
+            }
+
+            bot_attack() {
+                if (!startGame) return;
+                if (this.attackedShip == 0) {
+                    do {
+                        var x = Math.floor(Math.random() * this.sizex);
+                        var y = Math.floor(Math.random() * this.sizey);
+
+                    } while (this.FoeCoordsTab[y][x] != '')
+
+                    let result = this.foe_attack(x, y)
+                    this.FoeCoordsTab[y][x] = result;
+                    switch (result) {
+                        case C_SHOT: {
+                            break;
+                        }
+                        case C_HIT: {
+                            this.attackedShip.push({ x: x, y: y });
+                            break;
+                        }
+                        case C_SINKED: {
+                            this.attackedShipDirection = undefined;
+                            this.attackedShip.push({ x: x, y: y });
+                            this.setFoeShip();
+                            break;
+                        }
+                    }
+                }
+                else {
+                    let x = this.attackedShip[this.attackedShip.length - 1].x;
+                    let y = this.attackedShip[this.attackedShip.length - 1].y;
+                    let suggested = [];
+                    if (y > 0 && this.attackedShipDirection != 'h') {
+                        if (this.FoeCoordsTab[y - 1][x] == '') {
+                            suggested.push({ x: x, y: y - 1 });
+                        }
+                    }
+                    if (x > 0 && this.attackedShipDirection != 'v') {
+                        if (this.FoeCoordsTab[y][x - 1] == '') {
+                            suggested.push({ x: x - 1, y: y });
+                        }
+                    }
+                    if (y < this.sizey - 1 && this.attackedShipDirection != 'h') {
+                        if (this.FoeCoordsTab[y + 1][x] == '') {
+                            suggested.push({ x: x, y: y + 1 });
+                        }
+                    }
+                    if (x < this.sizex - 1 && this.attackedShipDirection != 'v') {
+                        if (this.FoeCoordsTab[y][x + 1] == '') {
+                            suggested.push({ x: x + 1, y: y });
+                        }
+                    }
+
+                    let sx, sy;
+                    if (suggested.length > 0) {
+                        let i = Math.floor(Math.random() * suggested.length)
+                        sx = suggested[i].x;
+                        sy = suggested[i].y;
+                    }
+                    else {
+                        if (this.attackedShipDirection == 'h') {
+                            let i = 1;
+                            if (this.attackedShip[0].x > this.attackedShip[1].x) {
+                                i = -1;
+                            }
+                            sx = this.attackedShip[0].x - i;
+                            sy = this.attackedShip[0].y;
+                        }
+                        else {
+                            let i = 1;
+                            if (this.attackedShip[0].y > this.attackedShip[1].y) {
+                                i = -1;
+                            }
+                            sx = this.attackedShip[0].x;
+                            sy = this.attackedShip[0].y - i;
+                        }
+                    }
+
+                    let result = this.foe_attack(sx, sy);
+                    this.FoeCoordsTab[sy][sx] = result;
+                    switch (result) {
+                        case C_SHOT: {
+
+                            break;
+                        }
+                        case C_HIT: {
+                            this.attackedShip.push({ x: sx, y: sy });
+
+                            if (this.attackedShip.length == 2) {
+                                if (this.attackedShip[0].x == this.attackedShip[1].x) {
+                                    this.attackedShipDirection = 'v';
+                                }
+                                else {
+                                    this.attackedShipDirection = 'h';
+                                }
+
+
+                            }
+
+                            break;
+                        }
+                        case C_SINKED: {
+                            this.attackedShip.push({ x: sx, y: sy });
+                            this.attackedShipDirection = undefined;
+                            this.setFoeShip();
+
+                        }
+                    }
+
+                }
+
+            }
+            setFoeShip() {
+                for (let s of this.attackedShip) {
+
+                    if (s.x > 0) {
+                        if (this.FoeCoordsTab[s.y][s.x - 1] == '') {
+                            this.FoeCoordsTab[s.y][s.x - 1] = 1;
+                        }
+                    }
+                    if (s.y > 0) {
+                        if (this.FoeCoordsTab[s.y - 1][s.x] == '') {
+                            this.FoeCoordsTab[s.y - 1][s.x] = 1;
+                        }
+                    }
+                    if (s.x < this.sizex - 1) {
+                        if (this.FoeCoordsTab[s.y][s.x + 1] == '') {
+                            this.FoeCoordsTab[s.y][s.x + 1] = 1;
+                        }
+                    }
+                    if (s.y < this.sizey - 1) {
+                        if (this.FoeCoordsTab[s.y + 1][s.x] == '') {
+                            this.FoeCoordsTab[s.y + 1][s.x] = 1;
+                        }
+                    }
+                    if (s.x > 0 && s.y > 0) {
+                        if (this.FoeCoordsTab[s.y - 1][s.x - 1] == '') {
+                            this.FoeCoordsTab[s.y - 1][s.x - 1] = 1;
+                        }
+                    }
+                    if (s.y > 0 && s.x < this.sizex - 1) {
+                        if (this.FoeCoordsTab[s.y - 1][s.x + 1] == '') {
+                            this.FoeCoordsTab[s.y - 1][s.x + 1] = 1;
+                        }
+                    }
+                    if (s.x < this.sizex - 1 && s.y < this.sizey - 1) {
+                        if (this.FoeCoordsTab[s.y + 1][s.x + 1] == '') {
+                            this.FoeCoordsTab[s.y + 1][s.x + 1] = 1;
+                        }
+                    }
+                    if (s.x > 0 && s.y < this.sizey - 1) {
+                        if (this.FoeCoordsTab[s.y + 1][s.x - 1] == '') {
+                            this.FoeCoordsTab[s.y + 1][s.x - 1] = 1;
+                        }
+                    }
+                }
+                this.attackedShip = [];
+            }
+        }
+
+        class Board extends Bot {
+            constructor(id) {
+                super();
+                this.name = id;
+                this.sizex = 10;
+                this.sizey = 10;
+                this.statkiTab = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
+                this.nrShips = 0;
+                this.CoordsTab = [];
+                this.HidenCoordsTab = [];
+                this.foe = undefined;
+                this.myTurn = false;
+                this.sinkedShips = 0;
+            }
+
+            init() {
+                this.createHTML();
+                this.renderCoordsTab();
+                this.renderField();
+                this.resetTab();
+                this.nrShips = this.statkiTab.length;
+                if (this.isBot) {
+                    this.setShipsRandom();
+                    this.HidenCoordsTab = [...this.CoordsTab];
+
+                    this.CoordsTab = [];
+                    this.CoordsTab = new Array(this.sizey);
+                    for (let i = 0; i < this.sizex; i++) {
+                        this.CoordsTab[i] = new Array(this.sizex);
+                    }
+
+                    for (let i = 0; i < this.sizey; i++) {
+                        for (let j = 0; j < this.sizex; j++) {
+                            this.CoordsTab[i][j] = "";
+                        }
+                    }
+
+                    this.FoeCoordsTab = new Array(this.sizey);
+                    for (let i = 0; i < this.sizex; i++) {
+                        this.FoeCoordsTab[i] = new Array(this.sizex);
+                    }
+
+                    for (let i = 0; i < this.sizey; i++) {
+                        for (let j = 0; j < this.sizex; j++) {
+                            this.FoeCoordsTab[i][j] = "";
+                        }
+                    }
+
+                    this.clearBoard()
+
+                }
+
+                else {
+                    this.addShipsToSet();
+                    this.HidenCoordsTab = this.CoordsTab;
+                    let fourShip = document.querySelector('.statki>div');
+                    fourShip = fourShip.querySelectorAll('div')
+
+                    for (let c of fourShip) {
+                        c.classList.add('ok')
+                    }
+                    if (!this.isBot) {
+                        this.sizeOfShip = 4;
+                    }
+                }
+            }
+
+            createHTML() {
+                let PlayerSide = document.createElement('div');
+                PlayerSide.setAttribute('id', this.name);
+                PlayerSide.setAttribute('class', 'PlayerSide');
+                document.querySelector('main').appendChild(PlayerSide)
+
+                let statki = document.createElement('div');
+                statki.setAttribute('class', 'statki');
+                PlayerSide.appendChild(statki);
+
+                let GameBoard = document.createElement('div');
+                GameBoard.setAttribute('class', 'GameBoard');
+                PlayerSide.appendChild(GameBoard);
+                GameBoard.style.width = 50 * this.sizex + 5 + "px";
+            }
+
+            setID(id) {
+                this.name = id;
+            }
+
+            addFoe(foeOBJ) {
+                this.foe = foeOBJ;
+            }
+            renderCoordsTab() {
+                this.CoordsTab = new Array(this.sizey);
+
+                for (let i = 0; i < this.sizex; i++) {
+                    this.CoordsTab[i] = new Array(this.sizex);
+                }
+
+            }
+
+            renderField() {
+
+                let board = document.querySelector('#' + this.name + ' .GameBoard');
+                for (let y = 0; y < this.sizey; y++) {
+                    for (let x = 0; x < this.sizex; x++) {
+                        let rect = document.createElement('div');
+                        board.appendChild(rect);
+                        this.B_addListeners(rect)
+                        if (x == 0) {
+                            rect.classList.add('clearBoth');
+                        }
+                    }
+                }
+            }
+
+            setShipsRandom() {
+                let statek = 0;
+                while (this.statkiTab.length) {
+
+
+                    let x = Math.floor(Math.random() * this.sizex);
+                    let y = Math.floor(Math.random() * this.sizey);
+                    let direction = Math.floor(Math.random() * 2);
+                    let size = this.statkiTab[0];
+
+                    if (this.isAvailable(x, y, size, direction)) {
+
+                        this.setShip(x, y, size, direction, false);
+                        this.statkiTab.shift();
+                    } else {
+                        // console.log('cant find place');
+
+                    }
+                }
+
+            }
+
+            isAvailable(x, y, s, d) {
+
+                if (d) {
+                    if (x + s > this.sizex) return false;
+                    for (let ix = x; ix < x + s; ix++) {
+                        if (this.CoordsTab[y][ix] != 0) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                else {
+                    if (y + s > this.sizey) return false;
+                    for (let iy = y; iy < y + s; iy++) {
+                        if (this.CoordsTab[iy][x] != 0) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+
+            }
+
+            set(x, y, val, mark = false) {
+
+                if (x < 0 || y < 0 || x >= this.sizex || y >= this.sizey) {
+                    return
+                }
+                let nr = y * this.sizex + x;
+                let els = document.querySelectorAll('#' + this.name + ' .GameBoard div');
+                let el = els[nr];
+
+                if (!mark) {
+                    this.CoordsTab[y][x] = val;
+                    if (val == C_SHIP) {
+                        el.style.backgroundColor = 'blue'
+                        this.CoordsTab[y][x] = val;
+                    }
+                    if (val == C_SHOT) {
+                        el.style.backgroundImage = "url(hit.png)"
+                    }
+                    if (val == C_SINKED) {
+                        el.style.backgroundColor = "red"
+
+                    }
+                    if (val == C_HIT) {
+                        el.style.backgroundImage = "url(cross.png)"
+                    }
+                    if (val == 1) {
+                        this.CoordsTab[y][x] = val;
+
+                    }
+
+                }
+                else {
+                    if (val == 0) {
+                        el.style.backgroundColor = 'red'
+                    }
+                    if (val == 1) {
+                        el.style.backgroundColor = '#00ff00'
+                    }
+                }
+
+            }
+
+            resetTab() {
+                for (let y = 0; y < this.sizey; y++) {
+                    for (let x = 0; x < this.sizex; x++) {
+                        this.set(x, y, '')
+                    }
+                }
+            };
+
+            setShip(x, y, size, direction) {
+
+                if (direction) {
+                    for (let iy = y - 1; iy < y + 2; iy++) {
+                        if (iy < 0 || iy > this.sizey - 1) continue;
+                        for (let ix = x - 1; ix < x + size + 1; ix++) {
+                            if (ix < 0 || ix > this.sizex - 1) continue;
+                            this.set(ix, iy, 1)
+                        }
+
+                    }
+
+                    for (let ix = x; ix < x + size; ix++) {
+
+                        this.set(ix, y, 2)
+                    }
+
+                }
+                else {
+
+                    for (let ix = x - 1; ix < x + 2; ix++) {
+                        if (ix < 0 || ix > this.sizex - 1) continue;
+                        for (let iy = y - 1; iy < y + size + 1; iy++) {
+                            if (iy < 0 || iy > this.sizey - 1) continue;
+                            this.set(ix, iy, 1)
+                        }
+                    }
+
+                    for (let iy = y; iy < y + size; iy++) {
+                        this.set(x, iy, 2)
+                    }
+
+                }
+            }
+
+            getXY(index) {
+                let y = Math.floor(index / this.sizex);
+                let x = index - y * this.sizex;
+                return ({ x: x, y: y });
+            }
+
+            selected(el) {
+                this.sizeOfShip = parseInt(el);
+
+            }
+
+            B_addListeners(div) {
+                let obj = this;
+
+                function event(t) {
+
+                    if (!obj.sizeOfShip) return;
+                    obj.clearBoard();
+                    let el = t;
+                    let index = [...el.parentElement.children].indexOf(el)
+                    let xy = obj.getXY(index);
+                    let x = xy.x;
+                    let y = xy.y;
+
+                    if (obj.directionOfNew) {
+                        if (x > obj.sizex - obj.sizeOfShip) x = obj.sizex - obj.sizeOfShip;
+                        for (let ix = x; ix < x + obj.sizeOfShip; ix++) {
+                            obj.set(ix, y, obj.isAvailable(x, y, obj.sizeOfShip, obj.directionOfNew), true);
+
+                        }
+                    }
+                    else {
+                        if (y > obj.sizey - obj.sizeOfShip) y = obj.sizey - obj.sizeOfShip;
+                        for (let iy = y; iy < y + obj.sizeOfShip; iy++) {
+
+                            obj.set(x, iy, obj.isAvailable(x, y,
+                                obj.sizeOfShip, obj.directionOfNew), true);
+                        }
+                    }
+
+                };
+
+                div.addEventListener('mouseover', function () {
+                    event(this)
+                });
+
+                div.addEventListener('contextmenu', function (e) {
+                    e.preventDefault();
+                    obj.directionOfNew = !obj.directionOfNew;
+                    event(this)
+                });
+
+                div.addEventListener('click', function ec(e) {
+                    if (!startGame && (obj.isBot || !obj.sizeOfShip)) {
+                        alert('Rozstaw wszystkie Statki i rozpocznij Grę!!');
+
+                        return;
+                    }
+                    if (!playerTurn && obj.isBot) {
+                        alert('Ruch Komputera')
+                        return;
+                    }
+
+                    e.preventDefault();
+
+                    if (obj.isBot) {
+                        let el = this;
+                        let index = [...el.parentElement.children].indexOf(el)
+                        let xy = obj.getXY(index);
+                        obj.foe.foe_attack(xy.x, xy.y);
+                        obj.nextTurn();
+                        this.removeEventListener('click', ec);
+                        return
+
+                    }
+                    if (!obj.sizeOfShip) {
+                        if (startGame) {
+                            if (playerTurn) {
+                                alert('Ruch Gracza')
+                            }
+                            else {
+                                alert('Ruch Komputera')
+                            }
+                        }
+                        return;
+                    }
+                    obj.clearBoard();
+                    let el = this;
+                    let index = [...el.parentElement.children].indexOf(el)
+                    let xy = obj.getXY(index);
+                    let x = xy.x;
+                    let y = xy.y;
+                    if (x > obj.sizex - obj.sizeOfShip && obj.directionOfNew) x = obj.sizex - obj.sizeOfShip;
+                    if (y > obj.sizey - obj.sizeOfShip && !obj.directionOfNew) y = obj.sizey - obj.sizeOfShip;
+
+                    if (obj.isAvailable(x, y, obj.sizeOfShip, obj.directionOfNew)) {
+                        obj.setShip(x, y, obj.sizeOfShip, obj.directionOfNew)
+                        obj.statkiTab.splice(obj.statkiTab.indexOf(obj.sizeOfShip), 1);
+                        obj.addShipsToSet()
+                        obj.sizeOfShip = 0;
+
+                        if (obj.statkiTab.length == 0) {
+                            let main = document.querySelector('main');
+                            let button = document.createElement('button');
+                            button.setAttribute('onclick', 'startGame=true')
+                            button.innerHTML = "Start Game!";
+                            main.appendChild(button)
+                        }
+                        for (let c of this.children) {
+
+                            c.classList.remove('ok')
+                        }
+
+
+
+                    }
+                });
+            }
+            clearBoard() {
+                let els = document.querySelectorAll('#' + this.name + ' .GameBoard div');
+
+                for (let i = 0; i < els.length; i++) {
+                    els[i].style.backgroundColor = '#ededed'
+
+                }
+                for (let y = 0; y < this.sizey; y++) {
+                    for (let x = 0; x < this.sizex; x++) {
+
+                        if (this.CoordsTab[y][x] == C_SHIP || this.CoordsTab[y][x] == C_HIT) {
+                            els[y * this.sizex + x].style.backgroundColor = "blue"
+                        }
+                        if (this.CoordsTab[y][x] == C_SINKED) {
+                            els[y * this.sizex + x].style.backgroundColor = "red"
+                        }
+                    }
+                }
+            }
+
+            foe_attack(x, y) {
+
+                let res = this.foe.defendYourSelf(x, y);
+
+                if (this.sinkedShips == this.nrShips) {
+                    startGame = false;
+                    if (this.isBot) {
+                        setTimeout(function () {
+                            alert('Wygrał Komputer')
+                        }, 1000);
+
+                        this.betrayShips();
+                        let button = document.querySelector('button');
+                        button.innerHTML = "New Game";
+                        button.setAttribute('onclick', 'location.reload();')
+                    }
+                    else {
+                        setTimeout(function () {
+                            alert('Wygrał Gracz')
+                            location.reload();
+                        }, 1000);
+
+                    }
+                }
+
+                if (res != C_SINKED && res != C_HIT) {
+                    changeTurn();
+                }
+
+                if (this.isBot && !playerTurn) {
+                    this.nextTurn();
+                }
+
+                return res;
+            }
+
+            defendYourSelf(x, y) {
+                let result = C_SHOT;
+                if (this.HidenCoordsTab[y][x] == C_SHIP) {
+                    this.set(x, y, C_HIT)
+                }
+                else {
+                    this.set(x, y, C_SHOT)
+                }
+
+
+                if (this.isBot) {
+
+                    this.CoordsTab[y][x] = this.HidenCoordsTab[y][x]
+                    this.clearBoard();
+
+                    if (this.HidenCoordsTab[y][x] == C_SHIP) {
+                        result = C_HIT;
+                        if (this.zatopiony(x, y)) {
+                            result = C_SINKED;
+                        }
+
+                    }
+                } else {
+                    if (this.CoordsTab[y][x] == C_HIT) {
+                        result = C_HIT;
+                        if (this.zatopiony(x, y)) {
+                            result = C_SINKED;
+                        }
+                    }
+
+                }
+
+                return result;
+            }
+
+            nextTurn() {
+                if (!playerTurn) {
+                    if (this.isBot) {
+                        let obj = this;
+                        setTimeout(function () {
+                            obj.bot_attack()
+                        }, 1000);
+                    }
+                }
+
+            }
+
+            zatopiony(x, y) {
+                let checked = [];
+                let isSinked = true;
+                let obj = this;
+                function flood(x, y) {
+                    if (x < 0 || y < 0 || x >= obj.sizex || y >= obj.sizey) return;
+
+                    if (obj.isBot) {
+                        if (obj.HidenCoordsTab[y][x] != C_SHIP) return;
+                        for (let i = 0; i < checked.length; i++) {
+                            if (checked[i].x == x && checked[i].y == y) {
+                                return;
+                            }
+                        }
+
+                        checked.push({ x: x, y: y });
+                        if (obj.isBot && obj.CoordsTab[y][x] != obj.HidenCoordsTab[y][x]) {
+                            isSinked = false;
+                        }
+                    }
+                    else {
+                        if (!(obj.HidenCoordsTab[y][x] == 2 || obj.HidenCoordsTab[y][x] == 6)) return;
+
+                        for (let i = 0; i < checked.length; i++) {
+                            if (checked[i].x == x && checked[i].y == y) {
+                                return;
+                            }
+                        }
+
+                        checked.push({ x: x, y: y });
+                        if (obj.CoordsTab[y][x] != 6) {
+                            isSinked = false;
+                        }
+                    }
+
+
+
+                    flood(x - 1, y);
+                    flood(x + 1, y);
+                    flood(x, y - 1);
+                    flood(x, y + 1);
+                    return;
+                }
+
+                flood(x, y);
+                if (isSinked) {
+                    for (let i = 0; i < checked.length; i++) {
+                        let _x = checked[i].x;
+                        let _y = checked[i].y;
+                        obj.CoordsTab[_y][_x] = C_SINKED;
+                    }
+                    obj.clearBoard();
+                    obj.foe.sinkedShips++
+                }
+                return isSinked;
+
+            }
+            betrayShips() {
+                for (let y = 0; y < this.sizey; y++) {
+                    for (let x = 0; x < this.sizex; x++) {
+                        if (this.HidenCoordsTab[y][x] == C_SHIP && this.CoordsTab[y][x] == '') {
+                            this.CoordsTab[y][x] = C_SHIP;
+                        }
+
+                    }
+                }
+                this.clearBoard()
+            }
+        }
+
+
+
+        BoardPlayer1 = new Board('Player1');
+        BoardPlayer1.init()
+
+        Bot = new Board('Bot');
+        Bot.makeBot();
+        Bot.init()
+
+        BoardPlayer1.addFoe(Bot);
+        Bot.addFoe(BoardPlayer1);
+
+    </script>
+</body>
+
+</html>

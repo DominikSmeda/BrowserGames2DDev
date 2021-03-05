@@ -1,0 +1,280 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <link rel="stylesheet" href="style/main.css">
+    <style>
+        body {
+            margin: 0px;
+            padding: 0px;
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: absolute;
+            margin: auto;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+
+        #bgCanvas {
+            z-index: 1;
+        }
+
+        #gameCanvas {
+            z-index: 2;
+        }
+
+        #scoreTable{
+            z-index: 4;
+            width:200px;
+            position: absolute;
+            top:0;
+            right: 0;
+            background: rgba(0,0,0,0.3);
+            color:white;
+            padding:20px;
+            text-align: center;
+            font-size: 20px;
+            border-bottom-left-radius: 5px;
+        }
+        
+        #scoreTable div{
+            text-align: left;
+
+            font-size: 15px;
+            margin: 5px;
+        }
+
+
+        #blocker {
+            z-index: 4;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="blocker">
+        <div id="customizer">
+            <h1>Agar.io</h1>
+            <input id="nickname" placeholder="nickname" type="text">
+            <input id="color" type="color">
+            <br />
+            <button onclick="setPlayerProp()">Play!</button>
+        </div>
+    </div>
+    <div id="scoreTable">
+        Score Board<br>
+        <div></div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <canvas id="bgCanvas"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.dev.js"></script>
+    <script src="js/socket.js"></script>
+    <script>
+
+        const gameID = '{{gameID}}';
+        window.onload = createConnection(gameID);
+
+
+        var canvas = document.getElementById('gameCanvas');
+        var bgcanvas = document.getElementById('bgCanvas');
+
+        var context = canvas.getContext('2d');
+        var bgcontext = bgcanvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        bgcanvas.width = window.innerWidth;
+        bgcanvas.height = window.innerHeight;
+        let gameStatus = false;
+
+        let move = false;
+        var angle = 0;
+        let speed = 0;
+
+        let keyboard = [];
+
+        let data = undefined;
+
+        let bgImage = new Image();
+        bgImage.src = "img/background.png";
+        //bgImage.onload = function () {
+        //  context.drawImage(bgImage, 0, 0);
+        //}
+
+        window.addEventListener('keydown', (e) => {
+            // console.log(e.keyCode)
+            keyboard[e.keyCode] = true;
+        })
+
+        window.addEventListener('keyup', (e) => {
+            keyboard[e.keyCode] = false;
+        })
+
+
+        let lastPosition = {};
+
+        function updateGame(data) {
+            let me = undefined;
+            for (let player of data.players) {
+                if (player.id == socket.id) {
+                    me = player;
+                    break;
+                }
+            }
+            if (!me) return;
+
+
+
+            bgcontext.translate(lastPosition.x - me.position.x, lastPosition.y - me.position.y)
+
+            context.rect(data.gameBoard.size.x - me.position.x + canvas.width / 2, 0, canvas.width, canvas.height);
+            context.rect(-data.gameBoard.size.x - me.position.x + canvas.width / 2, 0, -canvas.width, canvas.height);
+            context.rect(-data.gameBoard.size.x - me.position.x + canvas.width / 2, data.gameBoard.size.y - me.position.y + canvas.height / 2, data.gameBoard.size.x * 2, canvas.width);
+            context.rect(-data.gameBoard.size.x - me.position.x + canvas.width / 2, -data.gameBoard.size.y - me.position.y + canvas.height / 2, data.gameBoard.size.x * 2, -canvas.width);
+            context.fillStyle = "rgba(0,0,0,0.03)"
+            context.fill();
+            // console.log(me.position.x)
+
+
+            for (let food of data.food) {
+                let x = food.x - me.position.x + canvas.width / 2;
+                let y = food.y - me.position.y + canvas.height / 2;
+
+                context.beginPath();
+                context.arc(x, y, data.foodRadius, 0, 2 * Math.PI, false);
+                context.fillStyle = food.color;
+                context.fill();
+            }
+
+            data.players.sort((a, b) => a.radius - b.radius)
+            for (let player of data.players) {
+                let x = player.position.x - me.position.x + canvas.width / 2;
+                let y = player.position.y - me.position.y + canvas.height / 2;
+
+                context.beginPath();
+                context.arc(x, y, player.radius, 0, 2 * Math.PI, false);
+                context.fillStyle = player.color;
+                context.lineWidth = 5;
+                context.strokeStyle = 'rgba(0,0,0,0.4)';
+                context.fill();
+                context.stroke();
+
+                context.font = "25px Arial";
+                context.fillStyle = "white";
+                context.lineWidth = 3;
+                context.strokeStyle = 'rgba(0,0,0,1)';
+                context.textAlign = "center";
+
+                context.strokeText(player.nickname, x, y);
+                context.fillText(player.nickname, x, y)
+
+            }
+
+            let scoreTable = document.querySelector('#scoreTable div');
+
+            data.players.reverse();
+            scoreTable.innerHTML = '';
+            for (let i = 0; i < data.players.length; i++) {
+                if (i < 10 && data.players[i].nickname !== '') {
+                    let div = document.createElement('div');
+                    div.innerHTML = '' + (i + 1) + '. ' + data.players[i].nickname;
+                    scoreTable.appendChild(div);
+                }
+            }
+
+            lastPosition.x = me.position.x;
+            lastPosition.y = me.position.y;
+        }
+        let i = 0;
+
+        function Loop() {
+            // if (!gameStatus) return;
+            requestAnimationFrame(Loop)
+
+            // if (keyboard[87]) {//w
+            //     data.position.y -= 1;
+            // }
+            // if (keyboard[83]) {//s
+            //     data.position.y += 1;
+            // }
+            // if (keyboard[68]) {//a
+            //     data.position.x += 1;
+            // }
+            // if (keyboard[65]) {//d
+            //     data.position.x -= 1;
+            // }
+            // data.players[0].x = data.position.x;
+            // data.players[0].y = data.position.y;
+
+            // if (move) {
+            //     data.position.x += Math.cos(angle) * speed;
+            //     data.position.y += Math.sin(angle) * speed;
+            // }
+            // console.log(data.position)
+
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            // bgcontext.clearRect(0, 0, canvas.width, canvas.height);
+            // var pat = bgcontext.createPattern(bgImage, 'repeat');
+            // bgcontext.rect(0, 0, canvas.width, canvas.height);
+            //  bgcontext.fillStyle = pat;
+            //  bgcontext.fill();
+
+            //bgcontext.drawImage(bgImage, 0, 0, bgcanvas.width, bgcanvas.height, i++, 5, bgcanvas.width, bgcanvas.height)
+            if (data) {
+                updateGame(data);
+            }
+
+        }
+        Loop();
+
+
+        window.addEventListener('mousemove', (e) => {
+            if (keyboard[27]) return;
+            let mx = e.clientX - window.innerWidth / 2;
+            let my = e.clientY - window.innerHeight / 2;
+            let r = Math.sqrt(mx * mx + my * my) || 0;
+            // console.log(r);
+
+
+            speed = r / 60;
+            if (speed > 15) speed = 15;
+            angle = Math.atan2(my, mx)
+            // console.log(Math.cos(angle) * speed / 100,
+            //Math.sin(angle) * speed / 100);
+
+            SendPlayerAction({
+                type: 'move',
+                vec: {
+                    x: Math.cos(angle) * speed,
+                    y: Math.sin(angle) * speed
+                }
+            });
+
+        })
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        function darkerColor(color, percent) {
+
+            console.log(parseInt(color.substr(1)) - 100)
+        }
+
+    </script>
+</body>
+
+</html>
